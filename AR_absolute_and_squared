@@ -1,0 +1,31 @@
+#Financial Econometrics: AR absolut und quadriert
+
+install.packages("tseries")
+
+library(tseries)
+
+library(quantmod)
+
+#Bitcoin-Daten laden und plotten
+
+CCC <- getSymbols("CCC", sc="yahoo", from = "1993-01-22", env=NULL)
+
+chartSeries(CCC)
+
+#Daily returns und daily quadrierte returns detrenden
+
+CCC_returns <- dailyReturn(CCC, type = "log")
+
+#CCC_returns <- CCC_returns*mean(CCC_returns)
+CCC_quad_returns <- dailyReturn(CCC, type = "log")^2
+
+#CCC_quad_returns <- CCC_returns*mean(CCC_quad_returns)
+ar_fit_CCC_1 =  arma(Cl(CCC), order = c(1,0), include.intercept = TRUE)
+
+#AR(1) auf absolute returns schätzen
+
+ar_fit_CCC_absolute_returns_1 =  arma(CCC_returns, order = c(1,0), include.intercept = TRUE)
+
+#AR(1) auf quadrierte returns schätzen
+
+ar_fit_CCC_quad_returns_1 =  arma(CCC_quad_returns, order = c(1,0), include.intercept = TRUE)
