@@ -1,0 +1,63 @@
+#Financial Econometrics: ARMA
+
+install.packages("tseries")
+library(tseries)
+library(quantmod)
+
+#Amazon-Daten laden und plotten
+CCC <- getSymbols("CCC", sc="yahoo", from = "1993-01-22", env=NULL)
+chartSeries(CCC)
+
+#Daily returns detrenden
+CCC_returns <- dailyReturn(AMZN, type = "log")
+CCC_returns <- AMZN_returns*mean(AMZN_returns)
+
+?arma
+#AR(1) auf returns schätzen
+ar_fit_CCC_1 =  arma(Cl(CCC), order = c(1,0), include.intercept = TRUE)
+
+ar_fit_CCC_returns_1 =  arma(CCC_returns, order = c(1,0), include.intercept = TRUE)
+
+ar_fit_CCC_returns_absolute_1 =  arma(abs(CCC_returns), order = c(1,0), include.intercept = TRUE)
+
+
+#AR(5) auf returns schätzen
+ar_fit_CCC_5 =  arma(Cl(AMZN), order = c(5,0), include.intercept = TRUE)
+
+ar_fit_CCC_returns_5 =  arma(AMZN_returns, order = c(5,0), include.intercept = TRUE)
+
+ar_fit_CCC_returns_absolute_5 =  arma(abs(AMZN_returns), order = c(5,0), include.intercept = TRUE)
+
+
+#AR(1) simulieren
+?arima.sim
+plot(arima.sim(list(ar=c(0.0009,0), ma = c(0, 0)), n= 2000, rand.gen = rnorm))
+plot(rnorm(2000), type ="l")
+
+
+
+#Wir wollen aus einem AR(1)-Prozess mit alpha_1 > 1 simulieren
+
+set.seed(123)
+n <- 2000
+
+# Ich glaube man braucht noch die White Noise:
+wn <- ts(rnorm(n))
+
+# Den ersten Wert generieren
+ar1 <- ma1 <- arma11 <- wn[1:2]
+
+# Die Werte 3 bis 2000 als jeweils den vorherigen Wert mal 1,1 plus White Noise:
+for(i in 3:n){
+  ar1[i]      <- ar1[i - 1] * 1.1 + wn[i]
+  ma1[i]      <- wn[i - 1]  * 1.1 + wn[i]
+  arma11[i]   <- arma11[i - 1] * 0.8 + wn[i - 1] * 0.8 + wn[i] 
+}
+
+# Die Teile mit kumulativer Summe verknüpfen
+ar1 <- ts(ar1)
+ma1 <- ts(ma1)
+arma11 <- ts(arma11)
+arima111 <- ts(cumsum(arma11))
+
+plot(arima111)
