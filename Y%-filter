@@ -1,0 +1,53 @@
+#Financial Econometrics: Y%-Filter mit 5% Schranke
+
+#Packages
+install.packages("PerformanceAnalytics")
+install.packages("quantmod")
+install.packages("TTR")
+
+
+library(PerformanceAnalytics)
+library(quantmod)
+library(TTR)
+
+#Amazon-Daten laden
+getSymbols("AMZN")
+
+#Jwl. Schlusspreis
+price <- Cl(AMZN)
+#Jwl. Veränderung in %
+r <- price/Lag(price) - 1
+#Y bei 5%
+y<-0.05
+#Der erste Wert hat keine Veränderung, ausschließen
+Filter <-c(NA) 
+
+#Schleife über alle Tage außer dem ersten
+for (i in 2: length(Cl(AMZN))){
+  if (r[i] > y){
+    Filter[i]<- 1
+  } else if (r[i]< -y){
+    Filter[i]<- -1
+  } else
+    Filter[i]<- 0
+}
+
+
+#Das Filter in ein xts objekt konvertieren (Zeitbezug)
+Filter<-reclass(Filter,Cl(AMZN))
+
+#Die Trading rules für 2020 plotten
+chartSeries(AMZN,
+            type = 'line',
+            subset="2020-01::2020-05-19")
+addTA(Filter,type='S',col='red')
+
+#Handel immer auf Basis des Filters des vorangehenden Tages
+trade1 <- Lag(Filter)
+ret<-dailyReturn(AMZN)*trade1
+
+#Ein Performance Summary Chart mit Porfit and Loss plotten
+names(ret) <- 'y% Filter'
+charts.PerformanceSummary(ret)
+
+
